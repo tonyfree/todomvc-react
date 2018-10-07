@@ -23,7 +23,9 @@ class App extends Component {
   }
 
   componentDidUpdate () {
-    this.refs['editing'+this.state.editingIndex].focus()
+    let index = this.state.editingIndex
+    if (index < 0) return
+    this.refs['editing'+index].focus()
   }
 
   handlerChange = (e) => {
