@@ -225,6 +225,7 @@ class App extends Component {
                 this.state.filterTypes.map((type,index) => {
                   return (
                     <li onClick={e => this.changeType(index,e)} key={index}>
+                      {/* eslint-disable-next-line */}
                       <a className={this.state.filterIndex===index?"selected":""}>{type}</a>
                     </li>
                   )
