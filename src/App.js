@@ -35,6 +35,7 @@ class App extends Component {
         }
       ],
       editingIndex: -1,
+      editingTodo: null,
       editingText: '',
       filterTypes: ['All', 'Active', 'Completed'],
       filterIndex: 0
@@ -70,8 +71,9 @@ class App extends Component {
     })
   }
 
-  toggle = (todo, index) => {
+  toggle = (todo) => {
     let todos = this.state.todos
+    let index = todos.findIndex(item => item.name === todo.name)
     todos[index].completed = !todo.completed
     this.setState({todos})
   }
@@ -85,8 +87,9 @@ class App extends Component {
     this.setState({todos})
   }
 
-  remove = (index) => {
+  remove = (todo) => {
     let todos = this.state.todos
+    let index = todos.findIndex(item => item.name === todo.name)
     todos.splice(index, 1)
     this.setState({todos})
   }
@@ -94,15 +97,12 @@ class App extends Component {
   edit = (todo, index) => {
     let todos = this.state.todos
     todos.forEach(item => {
-      if (item.name === todo.name) {
-        item.editing = true
-      } else {
-        item.editing = false
-      }
+      item.editing = item.name === todo.name
     })
     this.setState({
+      editingTodo: todo,
       editingIndex: index,
-      editingText: todos[index].name,
+      editingText: todo.name,
       todos
     })
   }
@@ -113,31 +113,43 @@ class App extends Component {
     })
   }
 
-  editDone = () => {
+  editDone = (editTodo) => {
     let editingIndex = this.state.editingIndex
     if (editingIndex < 0) return
+    let name = this.state.editingText
     let todos = this.state.todos
-    let todo = todos[editingIndex]
+    let index = todos.findIndex(item => item.name === editTodo.name)
+    let todo = todos[index]
     todo.editing = false
-    todo.name = this.state.editingText
+    if (name) {
+      todo.name = name
+      this.setState({
+        todos
+      })
+    } else {
+      this.remove(todo)
+    }
     this.setState({
-      todos,
+      editingTodo: null,
       editingIndex: -1,
       editingText: ''
     })
   }
 
-  editKeyDown = (e) => {
+  editKeyDown = (todo, e) => {
     if (e.keyCode === ENTER_KEY ) {
-      this.editDone()
+      this.editDone(todo)
     }
     if (e.keyCode === ESCAPE_KEY ) {
       let todos = this.state.todos
-      let todo = todos[this.state.editingIndex]
+      let index = todos.findIndex(item => item.name === this.state.editingTodo.name)
+      let todo = todos[index]
       todo.editing = false
       this.setState({
+        editingTodo: null,
         editingIndex: -1,
-        editingText: ''
+        editingText: '',
+        todos
       })
     }
   }
@@ -161,7 +173,7 @@ class App extends Component {
       return todo.completed ? accum : accum + 1
     }, 0)
 
-    let todoList = filterTodos.map((todo,index) => {
+    let todoList = filterTodos.map((todo, index) => {
       let classNames = `${todo.completed?'completed':''} ${todo.editing?'editing':''}`
       return (
         <li className={classNames} key={todo.name}>
@@ -170,16 +182,16 @@ class App extends Component {
               className="toggle"
               type="checkbox"
               checked={todo.completed}
-              onChange={e => this.toggle(todo, index, e)}/>
+              onChange={e => this.toggle(todo, e)}/>
             <label onDoubleClick={e => this.edit(todo, index, e)}>{todo.name}</label>
-            <button className="destroy" onClick={e => this.remove(index, e)}></button>
+            <button className="destroy" onClick={e => this.remove(todo, e)}></button>
           </div>
           <input
               className="edit"
               value={this.state.editingText}
               ref={"editing"+index}
-              onKeyDown={this.editKeyDown}
-              onBlur={this.editDone}
+              onKeyDown={e => this.editKeyDown(todo, e)}
+              onBlur={e => this.editDone(todo, e)}
               onChange={this.editing}/>
         </li>
       )
@@ -225,6 +237,7 @@ class App extends Component {
                 this.state.filterTypes.map((type,index) => {
                   return (
                     <li onClick={e => this.changeType(index,e)} key={index}>
+                      {/* eslint-disable-next-line */}
                       <a className={this.state.filterIndex===index?"selected":""}>{type}</a>
                     </li>
                   )
